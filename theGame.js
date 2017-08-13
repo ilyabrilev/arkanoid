@@ -105,6 +105,7 @@
         this.dx = this.dxSpeed;
         this.dy = this.dySpeed;
         this.radius = 10;
+        this.sticked = true;
 
         this.drawBall = function() {
             ctx.beginPath();
@@ -194,10 +195,12 @@
         this.leftPressed = false;
         this.stickedBalls = [];
         this.readyToStick = false;
+        this.isControllerByMouse = true;
+        this.isControllerByKeyboard = true;
 
         this.drawPaddle = function() {
             ctx.beginPath();
-            ctx.rect(this.paddleX, canvas.height-this.paddleHeight, this.paddleWidth, this.paddleHeight);
+            ctx.rect(this.paddleX, canvas.height - this.paddleHeight, this.paddleWidth, this.paddleHeight);
             ctx.fillStyle = theGame.mainGameColor;
             ctx.fill();
             ctx.closePath();
@@ -212,22 +215,28 @@
         };
         this.move = function(x) {
             this.paddleX = x;
-            if (theGame.theBallIsSticked) {
-
-            }
+            this.stickedBalls.forEach(function(element) {
+                if (element.sticked) {
+                    element.x = this.paddleX + this.paddleWidth/2;
+                }
+            }, this);
         };
         this.movedByKeyboard = function() {
-            if(this.rightPressed && this.paddleX < canvas.width - this.paddleWidth) {
-                this.paddleX += this.keyboardMoveSpeed;
-            }
-            else if(this.leftPressed && this.paddleX > 0) {
-                this.paddleX -= this.keyboardMoveSpeed;
+            if (this.isControllerByKeyboard) {
+                if(this.rightPressed && this.paddleX < canvas.width - this.paddleWidth) {
+                    this.move(this.paddleX + this.keyboardMoveSpeed);
+                }
+                else if(this.leftPressed && this.paddleX > 0) {
+                    this.move(this.paddleX - this.keyboardMoveSpeed);
+                }
             }
         };
         this.mouseMoved = function(e) {
-            var relativeX = e.clientX - canvas.offsetLeft;
-            if(relativeX > 0 && relativeX < canvas.width) {
-                this.paddleX = relativeX - this.paddleWidth/2;
+            if (this.isControllerByMouse) {
+                var relativeX = e.clientX - canvas.offsetLeft;
+                if(relativeX > 0 && relativeX < canvas.width) {
+                    this.move(relativeX - this.paddleWidth/2);
+                }
             }
         };
         this.keyHandler = function(key, dir) {
