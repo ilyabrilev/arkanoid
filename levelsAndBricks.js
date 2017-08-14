@@ -10,6 +10,7 @@ class Brick {
         this.x = 0;
         this.y = 0;
         this.color = "#0095DD";
+        this.scoreValue = 1;
     }
     draw() {
         if(this.status == 1) {
@@ -22,6 +23,7 @@ class Brick {
     }
     changeStatus() {
         this.status = 0;
+        return this.scoreValue;
     }
 }
 
@@ -66,7 +68,7 @@ class Level {
         this.name = name;
         this.bricks = [];
         this.brickAmonth = 0;
-        this.levelScore = 0;
+        this.bricksDestroyed = 0;
     }
     bricksInit() {}
     drawBricks() {
@@ -77,13 +79,14 @@ class Level {
         }
     }
     changeStatus(brick) {
-        brick.changeStatus();
+        var score = brick.changeStatus();
         if (brick.status == 0) {
-            this.levelScore++;
+            this.bricksDestroyed++;
         }
+        return score;
     }
     levelEndCheck() {
-        if (this.levelscore >= this.brickAmonth)
+        if (this.bricksDestroyed >= this.brickAmonth)
             return true;
         else 
             return false;
@@ -129,3 +132,19 @@ class LevelTwo extends Level{
         }
     }
 }
+
+
+class Bonuses {
+
+}
+
+class ExplodeBonus extends Bonuses {
+    static explode(game) {
+        game.currentLevel.bricks.forEach(function(element) {
+            element.forEach(function(element) {
+                game.addScore(element);
+            }, this);            
+        }, this);
+    }
+}
+

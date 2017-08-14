@@ -13,10 +13,8 @@
         this.mainInterval = null;
         this.currentLevelNumber = 0;
         this.addScore = function(brick) {
-            this.currentLevel.changeStatus(b);
-            brick.status = 0;
-            this.score++;
-            if(this.score >= this.currentLevel.brickAmonth) {
+            this.score += this.currentLevel.changeStatus(brick);
+            if(this.currentLevel.levelEndCheck()) {
                 this.nextLevel();
             }
         };
@@ -25,9 +23,9 @@
             if (!(this.allLevels[this.currentLevelNumber]) )
                 this.wonAGame();
             else {
+                textHelper.addFade('Level ' + (this.currentLevelNumber + 1));
                 this.currentLevel = (this.allLevels[this.currentLevelNumber]);
                 this.currentLevel.bricksInit();
-                this.score = 0;
                 this.stateReset();
             }
         };
@@ -39,7 +37,9 @@
             textHelper.wonAGame();
             this.endGame();
         };
-        this.endGame = function() {            
+        this.endGame = function() {      
+            textHelper.drawFading();
+            textHelper.drawScore();
             drawVar = this.drawEndGame;
         };
         this.drawEndGame = function() {
@@ -74,28 +74,38 @@
     };
 
     function TextHelperClass() {
-        this.captionColor = "#006596";
+        this.captionColor = "rgba(0, 101, 150, 1)"; //#006596
+        this.fadeText = { text: 'Level 1', fontsize: '26px', durationStep: 1/80, durationLeft: 1 };
+        this.addFade = function(txt, fnt = '26px', dur = 80) {
+            this.fadeText = { text: txt, fontsize: fnt, durationStep: 1/dur, durationLeft: 1 };   
+        };
+        this.drawFading = function() {
+            if (this.fadeText.durationLeft > 0) {
+                ctx.font = this.fadeText.fontsize + " Arial Black";
+                ctx.fillStyle = "rgba(0, 101, 150, " + this.fadeText.durationLeft + ")";
+                this.fadeText.durationLeft -= this.fadeText.durationStep;
+                ctx.textAlign="center";
+                ctx.fillText(this.fadeText.text, canvas.width/2, canvas.height/2);     
+            }
+        };
         this.drawScore = function(score) {
             ctx.font = "16px Arial";
             ctx.fillStyle = this.captionColor;
+            ctx.textAlign="left";
             ctx.fillText("Score: " + score, 8, 20);
         };
         this.drawLives = function(lives) {
             ctx.font = "16px Arial";
             ctx.fillStyle = this.captionColor;
+            ctx.textAlign="left";
             ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
         };
         this.loseAGame = function() {
-            this.endGame("GAME OVER", "20px", 180);
+            this.addFade("GAME OVER", "20px");
         };
         this.wonAGame = function() {
-            this.endGame("YOU WON, CONGRATULATIONS!", "20px", 100);
+            this.addFade("YOU WON, CONGRATULATIONS!", "20px");
         };
-        this.endGame = function(msg, font, width) {
-            ctx.font = font + " Arial";
-            ctx.fillStyle = this.captionColor;
-            ctx.fillText(msg, width, canvas.height/2);                        
-        }
     };
 
     function Ball() {
@@ -211,6 +221,9 @@
                 this.stickBall(ball);
             }
         };
+        this.unstick = function() {
+
+        };
         this.stickBall = function() {
 
         };
@@ -270,6 +283,7 @@
         theGame.currentLevel.drawBricks();
         textHelper.drawScore(theGame.score);
         textHelper.drawLives(theGame.lives);
+        textHelper.drawFading();
         theGame.bricksCollision();
         //collisionDetection();        
         paddle.movedByKeyboard();
@@ -285,6 +299,7 @@
     document.addEventListener("keyup", keyUpHandler, false);
     document.addEventListener("mousemove", mouseMoveHandler, false);
     document.addEventListener("mouseup", mouseUpHandler, false);
+    document.addEventListener("keypress", keypressHandler, false);
     function mouseMoveHandler(e) {
         paddle.mouseMoved(e);
     }
@@ -292,11 +307,16 @@
         paddle.keyHandler(e.keyCode, true);
     }
     function keyUpHandler(e) {        
-        paddle.keyHandler(e.keyCode, false);
+        paddle.keyHandler(e.keyCode, false);        
     }
     function mouseUpHandler(e) {
         theGame.theBallIsSticked = false;
         paddle.unstick();
+    }
+    function keypressHandler(e) {
+        if ((e.keyCode == 101) || (e.keyCode == 1091)) {
+            ExplodeBonus.explode(theGame);
+        }
     }
 
     //mainInterval = setInterval(draw, 10);
