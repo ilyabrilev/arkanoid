@@ -12,10 +12,11 @@
         this.mainGameColor = "#0095DD";
         this.mainInterval = null;
         this.currentLevelNumber = 0;
-        this.addScore = function(b) {
-            b.status = 0;
+        this.addScore = function(brick) {
+            this.currentLevel.changeStatus(b);
+            brick.status = 0;
             this.score++;
-            if(this.score >=  theGame.currentLevel.brickAmonth) {
+            if(this.score >= this.currentLevel.brickAmonth) {
                 this.nextLevel();
             }
         };

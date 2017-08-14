@@ -20,6 +20,9 @@ class Brick {
             ctx.closePath();
         }
     }
+    changeStatus() {
+        this.status = 0;
+    }
 }
 
 class SimpleBrick extends Brick {
@@ -63,6 +66,7 @@ class Level {
         this.name = name;
         this.bricks = [];
         this.brickAmonth = 0;
+        this.levelScore = 0;
     }
     bricksInit() {}
     drawBricks() {
@@ -71,6 +75,18 @@ class Level {
                 this.bricks[c][r].draw();
             }
         }
+    }
+    changeStatus(brick) {
+        brick.changeStatus();
+        if (brick.status == 0) {
+            this.levelScore++;
+        }
+    }
+    levelEndCheck() {
+        if (this.levelscore >= this.brickAmonth)
+            return true;
+        else 
+            return false;
     }
 }
 
@@ -81,7 +97,7 @@ class LevelOne extends Level{
     bricksInit() {
         var brickRowCount = 3;
         var brickColumnCount = 5;
-        var color = new ColorSwitcher("#0095DD", "#00db0e");
+        var color = new ColorSwitcher("#0095dd", "#00db0e");
 
         for(var c = 0; c < brickColumnCount; c++) {
             this.bricks[c] = [];
