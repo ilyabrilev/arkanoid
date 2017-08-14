@@ -5,9 +5,8 @@
     function Game() {
         this.score = 0;
         this.lives = 2;
-        this.theBallIsSticked = true;
         this.balls = [ new Ball() ],
-        this.allLevels = [ new LevelOne(), new LevelTwo() ];
+        this.allLevels = [ new LevelOne(), new LevelTwo(), new LevelThree() ];
         this.currentLevel = this.allLevels[0];
         this.mainGameColor = "#0095DD";
         this.mainInterval = null;
@@ -39,15 +38,14 @@
         };
         this.endGame = function() {      
             textHelper.drawFading();
-            textHelper.drawScore();
+            textHelper.drawScore(this.score);
             drawVar = this.drawEndGame;
         };
         this.drawEndGame = function() {
         };
         this.stateReset = function() {
             ball.posReset();
-            paddle.posReset();
-            this.theBallIsSticked = true;
+            paddle.posReset([ball]);
         },
         this.ballDrop = function() {
             this.lives--;
@@ -65,7 +63,7 @@
             for(var c = 0; c < theGame.currentLevel.bricks.length; c++) {
                 for(var r = 0; r < theGame.currentLevel.bricks[c].length; r++) {
                     var b = theGame.currentLevel.bricks[c][r];
-                    if(b.status == 1) {
+                    if(b.status != 0) {
                         ball.brickCollision(b) ? this.addScore(b) : 0;
                     }
                 }
@@ -104,7 +102,7 @@
             this.addFade("GAME OVER", "20px");
         };
         this.wonAGame = function() {
-            this.addFade("YOU WON, CONGRATULATIONS!", "20px");
+            this.addFade("YOU HAVE WON, CONGRATULATIONS!", "20px");
         };
     };
 
@@ -138,7 +136,7 @@
         };
 
         this.mustGoOn = function() {
-            if (!theGame.theBallIsSticked) {
+            if (!this.sticked) {
                 this.x += this.dx;
                 this.y += this.dy;
             }
@@ -149,6 +147,7 @@
             this.y = canvas.height-30;
             this.dx = this.dxSpeed;
             this.dy = this.dySpeed;
+            this.sticked = true;
         };
 
         this.hitsAPaddle = function() {
@@ -196,7 +195,7 @@
         };
     }; 
 
-    function Paddle() {
+    function Paddle(balls) {
         this.paddleHeight = 10;
         this.paddleWidth = 75;
         this.paddleX = (canvas.width - this.paddleWidth)/2;
@@ -204,7 +203,7 @@
         this.segments = 3;
         this.rightPressed = false;
         this.leftPressed = false;
-        this.stickedBalls = [];
+        this.stickedBalls = balls;
         this.readyToStick = false;
         this.isControllerByMouse = true;
         this.isControllerByKeyboard = true;
@@ -222,17 +221,25 @@
             }
         };
         this.unstick = function() {
-
+            this.stickedBalls.forEach(function(element) {
+                element.sticked = false;
+            });
+            this.stickedBalls = [];
         };
         this.stickBall = function() {
 
         };
         this.move = function(x) {
             this.paddleX = x;
+            //проверяем коллизию паддла с краем отрисовки, если есть - запускаем все шарики
+            if ((this.paddleX < 0) || (this.paddleX + this.paddleWidth > canvas.width)) {
+                this.stickedBalls.forEach(function(element) {
+                    element.sticked = false;
+                }, this);
+                this.stickedBalls = [];
+            }
             this.stickedBalls.forEach(function(element) {
-                if (element.sticked) {
-                    element.x = this.paddleX + this.paddleWidth/2;
-                }
+                element.x = this.paddleX + this.paddleWidth/2;
             }, this);
         };
         this.movedByKeyboard = function() {
@@ -261,8 +268,9 @@
                 this.leftPressed = dir;
             }
         };
-        this.posReset = function() {
+        this.posReset = function(balls) {
             this.paddleX = (canvas.width - this.paddleWidth)/2;
+            this.stickedBalls = balls;
         }
     };
 
@@ -271,21 +279,19 @@
     var theGame = new Game();
 
     var ball = new Ball(); 
-    var paddle = new Paddle();
+    var paddle = new Paddle([ball]);
     var textHelper = new TextHelperClass();
     theGame.currentLevel.bricksInit();
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ball.drawBall();
-        paddle.drawPaddle();        
-        //drawBricks();
+        paddle.drawPaddle();
         theGame.currentLevel.drawBricks();
         textHelper.drawScore(theGame.score);
         textHelper.drawLives(theGame.lives);
         textHelper.drawFading();
-        theGame.bricksCollision();
-        //collisionDetection();        
+        theGame.bricksCollision();             
         paddle.movedByKeyboard();
         ball.hitAWallCollision();
         theGame.ballHitsAPaddle();        
@@ -303,14 +309,14 @@
     function mouseMoveHandler(e) {
         paddle.mouseMoved(e);
     }
-    function keyDownHandler(e) {        
+    function keyDownHandler(e) {
         paddle.keyHandler(e.keyCode, true);
     }
-    function keyUpHandler(e) {        
-        paddle.keyHandler(e.keyCode, false);        
+    function keyUpHandler(e) {
+        paddle.keyHandler(e.keyCode, false);
     }
     function mouseUpHandler(e) {
-        theGame.theBallIsSticked = false;
+        //ball.sticked = false;
         paddle.unstick();
     }
     function keypressHandler(e) {
