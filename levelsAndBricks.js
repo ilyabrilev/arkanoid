@@ -73,10 +73,10 @@ class ThreeLifeBrick extends Brick {
                 color = '#000';
                 break;
             case 2:
-                color = '#444';
+                color = '#555';
                 break;
             case 1:
-                color = '#999';
+                color = '#AAA';
                 break;
         }
         if(this.status != 0) {
@@ -119,7 +119,7 @@ class Level {
     }
     changeStatus(brick) {
         var score = brick.changeStatus();
-        if (brick.status == 0) {
+        if ((brick.status == 0) && (score != 0)) {
             this.bricksDestroyed++;
         }
         return score;
@@ -177,14 +177,15 @@ class LevelThree extends Level{
         super("Three");
     }
     bricksInit() {
-        var brickColumnCount = 6;        
+        var brickColumnCount = 6;
+        var color = new ColorSwitcher(["#0095DD", "#00db0e"]);
         for(var c = 0; c < brickColumnCount; c++) {
             this.bricks[c] = [];
-            this.bricks[c][0] = new StickBrick(c, 0, "#0095DD");
-            this.bricks[c][1] = new StickBrick(c, 1, "#00db0e");
-            this.bricks[c][2] = new StickBrick(c, 2, "#0095DD");
-            this.bricks[c][3] = new ThreeLifeBrick(c, 3, "#0095DD");
-            this.bricks[c][4] = new InvisibleBrick(c, 4, "#00db0e");
+            this.bricks[c][0] = new StickBrick(c, 0, color.next());
+            this.bricks[c][1] = new StickBrick(c, 1, color.next());
+            this.bricks[c][2] = new StickBrick(c, 2, color.next());
+            this.bricks[c][3] = new ThreeLifeBrick(c, 3, color.next());
+            this.bricks[c][4] = new InvisibleBrick(c, 4, color.next());
             this.brickAmonth += 5;
         }   
     }
