@@ -11,6 +11,8 @@
         this.mainGameColor = "#0095DD";
         this.mainInterval = null;
         this.currentLevelNumber = 0;
+        this.currentLevel.bricksInit();
+        this.isStopped = false;
         this.addScore = function(brick) {
             this.score += this.currentLevel.changeStatus(brick);
             if(this.currentLevel.levelEndCheck()) {
@@ -68,15 +70,41 @@
                     }
                 }
             }
-        }
+        };
+        this.stopSwitcher = function() {
+            if (this.isStopped) {
+                this.drawVar = this.draw;
+                this.draw();
+            }
+            else {
+                this.drawVar = this.drawEndGame;                
+            }
+            this.isStopped = !this.isStopped;
+        };
+        this.draw = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            theGame.currentLevel.drawBricks();
+            textHelper.drawScore(theGame.score);
+            textHelper.drawLives(theGame.lives);
+            textHelper.drawFading();
+            theGame.bricksCollision();
+            paddle.drawPaddle();
+            paddle.movedByKeyboard();
+            theGame.ballHitsAPaddle();
+            ball.drawBall();
+            ball.hitAWallCollision();        
+            ball.mustGoOn(); // \m/
+            requestAnimationFrame(theGame.drawVar);
+        };
+        this.drawVar = this.draw;
     };
 
     function TextHelperClass() {
-        this.captionColor = "rgba(0, 101, 150, 1)"; //#006596
-        this.fadeText = { text: 'Level 1', fontsize: '26px', durationStep: 1/80, durationLeft: 1 };
+        this.captionColor = "rgba(0, 101, 150, 1)"; //#006596        
         this.addFade = function(txt, fnt = '26px', dur = 80) {
             this.fadeText = { text: txt, fontsize: fnt, durationStep: 1/dur, durationLeft: 1 };   
         };
+        this.addFade('Level 1');
         this.drawFading = function() {
             if (this.fadeText.durationLeft > 0) {
                 ctx.font = this.fadeText.fontsize + " Arial Black";
@@ -195,7 +223,7 @@
         };
     }; 
 
-    function Paddle(balls) {
+    function Paddle(balls, mouse = true, keyboard = true) {
         this.paddleHeight = 10;
         this.paddleWidth = 75;
         this.paddleX = (canvas.width - this.paddleWidth)/2;
@@ -205,8 +233,8 @@
         this.leftPressed = false;
         this.stickedBalls = balls;
         this.readyToStick = false;
-        this.isControllerByMouse = true;
-        this.isControllerByKeyboard = true;
+        this.isControllerByMouse = mouse;
+        this.isControllerByKeyboard = keyboard;
 
         this.drawPaddle = function() {
             ctx.beginPath();
@@ -274,32 +302,10 @@
         }
     };
 
-    
-
     var theGame = new Game();
-
     var ball = new Ball(); 
     var paddle = new Paddle([ball]);
     var textHelper = new TextHelperClass();
-    theGame.currentLevel.bricksInit();
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ball.drawBall();
-        paddle.drawPaddle();
-        theGame.currentLevel.drawBricks();
-        textHelper.drawScore(theGame.score);
-        textHelper.drawLives(theGame.lives);
-        textHelper.drawFading();
-        theGame.bricksCollision();             
-        paddle.movedByKeyboard();
-        ball.hitAWallCollision();
-        theGame.ballHitsAPaddle();        
-        ball.mustGoOn(); // \m/
-        requestAnimationFrame(drawVar);
-    }
-
-    var drawVar = draw;
 
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
@@ -316,15 +322,21 @@
         paddle.keyHandler(e.keyCode, false);
     }
     function mouseUpHandler(e) {
-        //ball.sticked = false;
         paddle.unstick();
     }
     function keypressHandler(e) {
         if ((e.keyCode == 101) || (e.keyCode == 1091)) {
             ExplodeBonus.explode(theGame);
         }
+        if ((e.keyCode == 115) || (e.keyCode == 1099)) {
+            theGame.stopSwitcher();
+        }
     }
 
+    function draw() {
+        theGame.draw();
+        requestAnimationFrame(drawVar);
+    }
+    var drawVar = draw;
     //mainInterval = setInterval(draw, 10);
-    draw();
-
+    theGame.draw();
