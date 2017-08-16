@@ -7,6 +7,7 @@
         this.lives = 2;
         this.mainGameColor = "#0095dd";
         this.secondaryColor = "#00db0e";
+        this.gameEnded = false;
         this.balls = [ new Ball() ],
         this.allLevels = [ new LevelOne(), new LevelTwo(), new LevelThree() ];
         if (!gameStarted) {
@@ -37,9 +38,9 @@
                 this.wonAGame();
             else {
                 textHelper.addFade('Level ' + (this.currentLevelNumber + 1));
-                this.currentLevel = (this.allLevels[this.currentLevelNumber]);
-                this.currentLevel.bricksInit();
                 this.stateReset();
+                this.currentLevel = (this.allLevels[this.currentLevelNumber]);                
+                this.currentLevel.bricksInit();                
             }
         };
         this.loseAGame = function() {
@@ -53,14 +54,13 @@
         this.endGame = function() {
             textHelper.drawFading();
             textHelper.drawScore(this.score);
+            this.gameEnded = true;
             this.drawVar = this.drawEndGame;
         };
         this.drawEndGame = function() {
         };
         this.stateReset = function() {
-            this.balls.forEach(function(ball) {
-                ball.posReset();
-            }, this);            
+            this.balls = [ new Ball() ];
             this.paddles.forEach(function(paddle) {
                 paddle.posReset([]);
             }, this);
@@ -69,17 +69,31 @@
             }
         };
         this.createBallTwins = function() {
+            var newBalls = [];
             this.balls.forEach(function(element) {
-                element.createATwinn();
+                newBalls.push(element.createATwinn());
+            }, this);
+
+            newBalls.forEach(function(element) {
+                this.balls.push(element);
             }, this);
         };
         this.ballDrop = function(ball) {
-            this.lives--;
-            if(!this.lives) {
-                this.loseAGame();
-            }
-            else {
-                this.stateReset();
+            var newballs = [];
+            this.balls.forEach(function(oneBall) {
+                if (oneBall != ball) {
+                    newballs.push(oneBall);
+                }
+            }, this);
+            this.balls = newballs;
+            if (this.balls.length == 0) {
+                this.lives--;
+                if(!this.lives) {
+                    this.loseAGame();
+                }
+                else {
+                    this.stateReset();
+                }
             }
         };
         this.ballHitsAPaddle = function() {
@@ -107,7 +121,7 @@
                 this.draw();
             }
             else {
-                this.drawVar = this.drawEndGame;                
+                this.drawVar = this.drawEndGame;
             }
             this.isStopped = !this.isStopped;
         };
@@ -173,8 +187,6 @@
     };
 
     var theGame = new Game();
-    /*var ball = new Ball(); 
-    var paddle = new Paddle([ball], false, false);*/
     var textHelper = new TextHelperClass('WELCOME TO A GAME!', '26px', -1001);
 
     document.addEventListener("keydown", keyDownHandler, false);
@@ -226,20 +238,16 @@
             }, this);
         }
     }
-    /*
-    function draw() {
-        theGame.draw();
-        requestAnimationFrame(drawVar);
-    }
-    var drawVar = draw;*/
     //mainInterval = setInterval(draw, 10);
     theGame.draw();
 
-    function GameRestart(twoP) {
-        theGame.endGame(); 
-        theGame = new Game(true, twoP); 
-        /*ball = new Ball(); 
-        paddle = new Paddle([ball], true, false);*/
+    function GameRestart(isTwoPlayers) {
+        //theGame.endGame(); 
+        var gameEnded = theGame.gameEnded;
+        theGame = new Game(true, isTwoPlayers);
         textHelper = new TextHelperClass('Level 1');
-        //theGame.draw(); 
+        if (gameEnded) {
+            theGame.drawVar = theGame.draw;
+            theGame.draw();
+        }
     }

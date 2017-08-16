@@ -10,6 +10,7 @@
 </head>
 <body>
 
+<div>Disclaimer: work in progress</div>
 <canvas id="myCanvas" width="480" height="320"></canvas>
 
 <script type="text/javascript" src="./levelsAndBricks.js"></script>
@@ -17,9 +18,18 @@
 <script type="text/javascript" src="./ball.js"></script>
 <script type="text/javascript" src="./theGame.js"></script>
 
-<div style="text-align: center">
+<div style="    width: 450px;     margin-right: auto;    margin-left: auto;      margin-top: 10px">
     <input value="Play (1p)"  onclick="GameRestart(false);" type="button">
     <input value="Play (2p)"  onclick="GameRestart(true);" type="button">
+    <div>
+        <ul>
+            <li>Play (1p) - одина пластина, контролируемая и мышью, и клавиатурой</li>
+            <li>Play (2p) - две пластина, одна контролируется мышью, другая - кавиантурой</li>
+            <li>e - "ударить" все блоки на уровне</li>
+            <li>p - пауза</li>
+            <li>n - спавн дополнительного шара</li>
+        </ul>
+    </div>
 </div>
 
 
