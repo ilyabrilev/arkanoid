@@ -13,10 +13,13 @@
 <canvas id="myCanvas" width="480" height="320"></canvas>
 
 <script type="text/javascript" src="./levelsAndBricks.js"></script>
+<script type="text/javascript" src="./paddle.js"></script>
+<script type="text/javascript" src="./ball.js"></script>
 <script type="text/javascript" src="./theGame.js"></script>
 
 <div style="text-align: center">
-    <input value="Нажми меня"  onclick="GameRestart();" type="button">
+    <input value="Play (1p)"  onclick="GameRestart(false);" type="button">
+    <input value="Play (2p)"  onclick="GameRestart(true);" type="button">
 </div>
 
 
