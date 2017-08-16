@@ -75,11 +75,16 @@
         this.posReset = function(balls) {
             this.paddleX = (canvas.width - this.paddleWidth)/2;
             this.stickedBalls = balls;
+            this.controllCheck();
         }
 
-
-        if (!this.isControllerByMouse && !this.isControllerByKeyboard) {
-            balls[0].bindPaddle(this);
-            this.unstick();
+        this.controllCheck = function() {
+            if (!this.isControllerByMouse && !this.isControllerByKeyboard) {
+                if (this.stickedBalls.length > 0) {
+                    this.stickedBalls[0].bindPaddle(this);
+                    this.unstick();
+                }
+            }
         }
+        this.controllCheck();
     };

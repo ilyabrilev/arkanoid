@@ -26,23 +26,28 @@
         this.currentLevelNumber = 0;
         this.currentLevel.bricksInit();
         this.isStopped = false;
+        this.levelNeedsChanging = false;
         this.addScore = function(brick) {
             this.score += this.currentLevel.changeStatus(brick);
             if(this.currentLevel.levelEndCheck()) {
-                this.nextLevel();
+                this.levelNeedsChanging = true;
+                //this.nextLevel();
             }
         };
         this.nextLevel = function() {
-            this.currentLevelNumber++;
-            if (!(this.allLevels[this.currentLevelNumber]) )
-                this.wonAGame();
-            else {
-                textHelper.addFade('Level ' + (this.currentLevelNumber + 1));
-                this.stateReset();
-                this.currentLevel = (this.allLevels[this.currentLevelNumber]);                
-                this.currentLevel.bricksInit();                
+            if (this.levelNeedsChanging) {
+                this.levelNeedsChanging = false;
+                this.currentLevelNumber++;
+                if (!(this.allLevels[this.currentLevelNumber]) )
+                    this.wonAGame();
+                else {
+                    textHelper.addFade('Level ' + (this.currentLevelNumber + 1));
+                    this.stateReset();
+                    this.currentLevel = (this.allLevels[this.currentLevelNumber]);                
+                    this.currentLevel.bricksInit();                
+                }
             }
-        };
+        };        
         this.loseAGame = function() {
             textHelper.loseAGame();
             this.endGame();
@@ -64,7 +69,7 @@
             this.paddles.forEach(function(paddle) {
                 paddle.posReset([]);
             }, this);
-            if (this.paddles[0]) {
+            if (this.paddles.length > 0) {
                 this.paddles[0].posReset(this.balls);
             }
         };
@@ -127,11 +132,11 @@
         };
         this.draw = function() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            theGame.nextLevel();
             theGame.currentLevel.drawBricks();
             textHelper.drawScore(theGame.score);
             textHelper.drawLives(theGame.lives);
-            textHelper.drawFading();
-            theGame.bricksCollision();
+            textHelper.drawFading();            
 
             theGame.paddles.forEach(function(paddle) {
                 paddle.drawPaddle();
@@ -145,6 +150,9 @@
                 ball.hitAWallCollision();        
                 ball.mustGoOn(); // \m/
             }, this);
+
+            
+            theGame.bricksCollision();
 
             requestAnimationFrame(theGame.drawVar);
         };
