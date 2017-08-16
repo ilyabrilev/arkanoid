@@ -2,13 +2,19 @@
 	var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
 
-    function Game() {
+    function Game(gameStarted = false, twoPlayers = false) {
         this.score = 0;
         this.lives = 2;
+        this.mainGameColor = "#0095dd";
+        this.secondaryColor = "#00db0e";
         this.balls = [ new Ball() ],
         this.allLevels = [ new LevelOne(), new LevelTwo(), new LevelThree() ];
-        this.currentLevel = this.allLevels[0];
-        this.mainGameColor = "#0095DD";
+        this.paddles = [ new Paddle(this.balls, !gameStarted, !gameStarted) ];
+        if (twoPlayers) {
+            this.paddles = [ new Paddle(this.balls, true, false, this.mainGameColor),
+                 new Paddle(this.balls, false, true, this.secondaryColor) ];
+        }
+        this.currentLevel = this.allLevels[0];        
         this.mainInterval = null;
         this.currentLevelNumber = 0;
         this.currentLevel.bricksInit();
@@ -38,18 +44,23 @@
             textHelper.wonAGame();
             this.endGame();
         };
-        this.endGame = function() {      
+        this.endGame = function() {
             textHelper.drawFading();
             textHelper.drawScore(this.score);
-            drawVar = this.drawEndGame;
+            this.drawVar = this.drawEndGame;
         };
         this.drawEndGame = function() {
         };
         this.stateReset = function() {
             ball.posReset();
             paddle.posReset([ball]);
-        },
-        this.ballDrop = function() {
+        };
+        this.createBallTwins = function() {
+            this.balls.forEach(function(element) {
+                element.createATwinn();
+            }, this);
+        };
+        this.ballDrop = function(ball) {
             this.lives--;
             if(!this.lives) {
                 this.loseAGame();
@@ -99,14 +110,14 @@
         this.drawVar = this.draw;
     };
 
-    function TextHelperClass() {
+    function TextHelperClass(initText, initFnt = '26px', initDur = 80) {
         this.captionColor = "rgba(0, 101, 150, 1)"; //#006596        
         this.addFade = function(txt, fnt = '26px', dur = 80) {
             this.fadeText = { text: txt, fontsize: fnt, durationStep: 1/dur, durationLeft: 1 };   
         };
-        this.addFade('Level 1');
+        this.addFade(initText, initFnt, initDur);
         this.drawFading = function() {
-            if (this.fadeText.durationLeft > 0) {
+            if ((this.fadeText.durationLeft > 0) || (this.fadeText.durationLeft == -1001)){
                 ctx.font = this.fadeText.fontsize + " Arial Black";
                 ctx.fillStyle = "rgba(0, 101, 150, " + this.fadeText.durationLeft + ")";
                 this.fadeText.durationLeft -= this.fadeText.durationStep;
@@ -144,12 +155,30 @@
         this.radius = 10;
         this.sticked = true;
 
+        this.bindedPaddle = null;
+
+        this.bindPaddle = function(paddle) {
+            this.bindedPaddle = paddle;
+        };
+
         this.drawBall = function() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
             ctx.fillStyle = theGame.mainGameColor;
             ctx.fill();
             ctx.closePath();
+        };
+
+        this.createATwinn = function() {
+            var newball = new Ball();
+
+            for (var attr in this) {
+                if (newball.hasOwnProperty(attr)) newball[attr] = this[attr];
+            }
+            newball.sticked = false;
+            newball.dx = -newball.dx;
+
+            return newball;
         };
 
         this.hitAWallCollision = function() {
@@ -159,7 +188,7 @@
             if(this.y + this.dy < this.radius) {
                 this.dy = -this.dy;
             } else if(this.y + this.dy > canvas.height - this.radius) {
-                theGame.ballDrop();
+                theGame.ballDrop(this);
             }
         };
 
@@ -167,6 +196,9 @@
             if (!this.sticked) {
                 this.x += this.dx;
                 this.y += this.dy;
+                if (this.bindedPaddle != null) {
+                    this.bindedPaddle.move(this.x - this.bindedPaddle.paddleWidth/2);
+                }
             }
         };
         
@@ -175,7 +207,9 @@
             this.y = canvas.height-30;
             this.dx = this.dxSpeed;
             this.dy = this.dySpeed;
-            this.sticked = true;
+            if (this.bindedPaddle == null) {
+                this.sticked = true;
+            }
         };
 
         this.hitsAPaddle = function() {
@@ -223,7 +257,7 @@
         };
     }; 
 
-    function Paddle(balls, mouse = true, keyboard = true) {
+    function Paddle(balls, mouse = true, keyboard = true, color = "#0095DD") {
         this.paddleHeight = 10;
         this.paddleWidth = 75;
         this.paddleX = (canvas.width - this.paddleWidth)/2;
@@ -235,11 +269,12 @@
         this.readyToStick = false;
         this.isControllerByMouse = mouse;
         this.isControllerByKeyboard = keyboard;
+        this.color = color;
 
         this.drawPaddle = function() {
             ctx.beginPath();
             ctx.rect(this.paddleX, canvas.height - this.paddleHeight, this.paddleWidth, this.paddleHeight);
-            ctx.fillStyle = theGame.mainGameColor;
+            ctx.fillStyle = this.color;
             ctx.fill();
             ctx.closePath();
         };
@@ -300,12 +335,18 @@
             this.paddleX = (canvas.width - this.paddleWidth)/2;
             this.stickedBalls = balls;
         }
+
+
+        if (!this.isControllerByMouse && !this.isControllerByKeyboard) {
+            balls[0].bindPaddle(this);
+            this.unstick();
+        }
     };
 
     var theGame = new Game();
     var ball = new Ball(); 
-    var paddle = new Paddle([ball]);
-    var textHelper = new TextHelperClass();
+    var paddle = new Paddle([ball], false, false);
+    var textHelper = new TextHelperClass('WELCOME TO A GAME!', '26px', -1001);
 
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
@@ -325,18 +366,37 @@
         paddle.unstick();
     }
     function keypressHandler(e) {
+        //e или у
         if ((e.keyCode == 101) || (e.keyCode == 1091)) {
             ExplodeBonus.explode(theGame);
         }
-        if ((e.keyCode == 115) || (e.keyCode == 1099)) {
+        //s или ы
+        /*if ((e.keyCode == 115) || (e.keyCode == 1099)) {
+            theGame.stopSwitcher();
+        }*/
+        //p или з
+        if ((e.keyCode == 112) || (e.keyCode == 1079)) {
             theGame.stopSwitcher();
         }
+        //n или т
+        if ((e.keyCode == 110 ) || (e.keyCode == 1090)) {
+            theGame.createBallTwins();
+        }
     }
-
+    /*
     function draw() {
         theGame.draw();
         requestAnimationFrame(drawVar);
     }
-    var drawVar = draw;
+    var drawVar = draw;*/
     //mainInterval = setInterval(draw, 10);
     theGame.draw();
+
+    function GameRestart() {
+        theGame.endGame(); 
+        theGame = new Game(true, false); 
+        ball = new Ball(); 
+        paddle = new Paddle([ball], true, false);
+        textHelper = new TextHelperClass('Level 1');
+        //theGame.draw(); 
+    }
